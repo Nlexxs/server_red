@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using server_red.Models;
 
 namespace server_red.Controllers
 {

@@ -1,6 +1,7 @@
 using System;
 using System.Data;
 using Oracle.ManagedDataAccess.Client;
+using server_red;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<IRedRepository, RedRepository>();
 
 var app = builder.Build();
 
@@ -24,43 +26,43 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-TestConnection();
+//OracleConnection oraCon = InitConnection();
 
 app.Run();
 
-
-static void TestConnection()
+static OracleConnection InitConnection()
 {
-    string user = "red";
-    string pwd = "";
-    string db = "85.143.223.149:1521";
-    string conStringUser = "User Id=" + user + ";Password=" + pwd + ";Data Source=" + db + ";";
-
-    using (OracleConnection con = new OracleConnection(conStringUser))
+    bool isConnected = false;
+    while (!isConnected)
     {
-        using (OracleCommand cmd = con.CreateCommand())
+        isConnected = true;
+        Console.WriteLine("User Id=");
+        string? input = Console.In.ReadLine();
+        Console.WriteLine("Password=");
+        string user = input != null ? input : "";
+        input = Console.In.ReadLine();
+        string pwd = input != null ? input : "";
+        string db = "85.143.223.149:1521";
+
+        string conStringUser = "User Id=" + user + ";Password=" + pwd + ";Data Source=" + db + ";";
+        using (OracleConnection con = new OracleConnection(conStringUser))
         {
             try
             {
                 con.Open();
-                Console.WriteLine("Successfully connected to Oracle Database as " + user);
-                Console.WriteLine();
-
-                //Retrieve sample data
-                cmd.CommandText = "SELECT * FROM TEST_TABLE";
-                OracleDataReader reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    Console.WriteLine(reader.GetString(0));
-                }
-
-
-                reader.Dispose();
+                return con;
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Console.WriteLine(ex.Message);
+                isConnected = false;
+                Console.WriteLine(e.Message);
             }
         }
     }
+    throw new Exception();
+}
+
+void DestroyConnection()
+{
+    oraCon.Close();
 }
